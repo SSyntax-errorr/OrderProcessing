@@ -34,7 +34,7 @@ public class StockManagement extends JFrame {
         this.refreshStockDisplay();
         this.add(new JScrollPane(this.stockDisplay), "Center");
         JPanel updatePanel = new JPanel(new GridLayout(3, 2));
-        JLabel itemLabel = new JLabel("Item Name:");
+        JLabel itemLabel = new JLabel("Item ID:");
         this.itemNameField = new JTextField();
         JLabel stockLabel = new JLabel("New Stock Level:");
         this.newStockField = new JTextField();
@@ -64,7 +64,7 @@ public class StockManagement extends JFrame {
                 ResultSet rs = stmt.executeQuery();
         ) {
             while(rs.next()) {
-                stockInfo.append(rs.getString("item_name")).append(": ").append(rs.getInt("stock_level")).append(" units\n");
+                stockInfo.append(rs.getString("item_id")).append(": ").append(rs.getInt("quantity")).append(" units\n");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -84,7 +84,7 @@ public class StockManagement extends JFrame {
             return;
         }
 
-        String sql = "UPDATE Stock SET stock_level = ? WHERE item_name = ?";
+        String sql = "UPDATE Stock SET quantity = ? WHERE item_id = ?";
 
         try (
                 Connection conn = DatabaseConnector.connect();
