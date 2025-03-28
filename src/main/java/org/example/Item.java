@@ -3,10 +3,12 @@ package org.example;
 public class Item {
     private int item_id;
     private String name;
+    private int cost;
 
-    public Item(int id, String name) {
+    public Item(int id, String name, int cost) {
         this.item_id = id;
         this.name = name;
+        this.cost = cost;
     }
 
     public int getId() {
@@ -15,6 +17,10 @@ public class Item {
 
     public String getName() {
         return name;
+    }
+
+    public int getCost(){
+        return cost;
     }
 
     @Override

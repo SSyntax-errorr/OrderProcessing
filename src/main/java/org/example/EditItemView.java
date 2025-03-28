@@ -1,0 +1,71 @@
+package org.example;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+public class EditItemView extends JFrame {
+
+
+    private JTextField newPrice;
+    private JButton confirmBtn;
+    private JTextField productField;
+    private JTextField quantityField;
+    private JComboBox items;
+
+    public EditItemView(ArrayList<Item> itemList){
+
+        this.setTitle("Edit Price");
+        this.setSize(400, 300);
+        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.setLayout(new GridLayout(4, 2));
+        items = new JComboBox();
+        newPrice = new JTextField();
+        confirmBtn = new JButton("Confirm");
+        confirmBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                editPrice();
+            }
+        });
+//        this.add(items);
+        for (Item item : itemList) {
+            items.addItem(item);
+        }
+        this.add(items);
+        this.add(newPrice);
+        this.add(confirmBtn);
+        this.setVisible(true);
+    }
+
+
+    public void editPrice() {
+        String sql_edit_price = "UPDATE items SET cost_price = ? WHERE item_id = ?";
+        Item selectedItem = (Item) this.items.getSelectedItem();
+
+        try (Connection conn = DatabaseConnector.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql_edit_price)) {
+
+            stmt.setDouble(1, Double.parseDouble( newPrice.getText()));
+            stmt.setInt(2, selectedItem.getId());
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Price updated successfully!");
+            } else {
+                JOptionPane.showMessageDialog(null, "Item not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+}

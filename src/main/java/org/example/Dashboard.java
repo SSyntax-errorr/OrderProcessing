@@ -6,6 +6,7 @@ package org.example;//
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -20,18 +21,34 @@ public class Dashboard extends JFrame {
         this.add(welcomeLabel);
         JButton orderButton = new JButton("Manage Orders");
         JButton stockButton = new JButton("Manage Stock");
+        JButton addOrderButton = new JButton("Add Orders");
         orderButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 new OrderManagement();
             }
         });
-        stockButton.addActionListener(new ActionListener() {
+        addOrderButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                new StockManagement();
+                new AddNewOrderView();
             }
         });
-        this.add(orderButton);
-        this.add(stockButton);
+        stockButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                new StockManagement(role);
+            }
+        });
+
+        if(Objects.equals(role, "Sales Person")|| Objects.equals(role, "IS Manager")){
+            this.add(addOrderButton);
+            this.add(orderButton);
+        }
+
+
+
+        if (Objects.equals(role, "Inventory Officer") || Objects.equals(role, "IS Manager")) {
+            this.add(stockButton);
+        }
+
         this.setVisible(true);
     }
 }

@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Objects;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -24,8 +26,10 @@ public class StockManagement extends JFrame {
     private JTextArea stockDisplay;
     private JTextField itemNameField;
     private JTextField newStockField;
+    private ArrayList<Item> itemList;
 
-    public StockManagement() {
+    public StockManagement(String role) {
+        itemList = new ArrayList<>();
         this.setTitle("Stock Management");
         this.setSize(400, 300);
         this.setLayout(new BorderLayout());
@@ -44,19 +48,43 @@ public class StockManagement extends JFrame {
                 StockManagement.this.updateStock();
             }
         });
+
         updatePanel.add(itemLabel);
         updatePanel.add(this.itemNameField);
         updatePanel.add(stockLabel);
         updatePanel.add(this.newStockField);
         updatePanel.add(new JLabel());
         updatePanel.add(updateButton);
+        if(Objects.equals(role, "IS Manager")){
+            JButton editPriceBtn = new JButton("Edit Price");
+            editPriceBtn.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+
+                    new EditItemView(itemList);
+
+                }
+            });
+            updatePanel.add(editPriceBtn);
+
+
+            JButton addButton = new JButton("Add Item");
+            addButton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    new AddItemView();
+                }
+            });
+            updatePanel.add(addButton);
+
+        }
+
         this.add(updatePanel, "South");
         this.setVisible(true);
     }
 
     private void refreshStockDisplay() {
         StringBuilder stockInfo = new StringBuilder();
-        String sql = "SELECT * FROM Stock";
+        String sql = "SELECT * FROM items";
 
         try (
                 Connection conn = DatabaseConnector.connect();
@@ -64,7 +92,8 @@ public class StockManagement extends JFrame {
                 ResultSet rs = stmt.executeQuery();
         ) {
             while(rs.next()) {
-                stockInfo.append(rs.getString("item_id")).append(": ").append(rs.getInt("quantity")).append(" units\n");
+                stockInfo.append(rs.getString("name")).append(": Rs ").append(rs.getInt("cost_price")).append(" : ").append(rs.getInt("stock_level")).append(" units\n");
+                itemList.add(new Item(rs.getInt("item_id"), rs.getString("name"), rs.getInt("cost_price")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -84,7 +113,7 @@ public class StockManagement extends JFrame {
             return;
         }
 
-        String sql = "UPDATE Stock SET quantity = ? WHERE item_id = ?";
+        String sql = "UPDATE items SET stock_level = ? WHERE item_id = ?";
 
         try (
                 Connection conn = DatabaseConnector.connect();
