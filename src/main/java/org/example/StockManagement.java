@@ -93,7 +93,7 @@ public class StockManagement extends JFrame {
         ) {
             while(rs.next()) {
                 stockInfo.append(rs.getString("name")).append(": Rs ").append(rs.getInt("cost_price")).append(" : ").append(rs.getInt("stock_level")).append(" units\n");
-                itemList.add(new Item(rs.getInt("item_id"), rs.getString("name"), rs.getInt("cost_price")));
+                itemList.add(new Item(rs.getInt("item_id"), rs.getString("name"), rs.getInt("cost_price"), rs.getInt("stock_level")));
             }
         } catch (SQLException e) {
             e.printStackTrace();

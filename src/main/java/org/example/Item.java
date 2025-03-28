@@ -4,11 +4,13 @@ public class Item {
     private int item_id;
     private String name;
     private int cost;
+    private int stock;
 
-    public Item(int id, String name, int cost) {
+    public Item(int id, String name, int cost, int stock) {
         this.item_id = id;
         this.name = name;
         this.cost = cost;
+        this.stock = stock;
     }
 
     public int getId() {
@@ -21,6 +23,10 @@ public class Item {
 
     public int getCost(){
         return cost;
+    }
+
+    public int getStock() {
+        return stock;
     }
 
     @Override
