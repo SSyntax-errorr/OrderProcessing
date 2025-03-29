@@ -1,6 +1,5 @@
 package org.example;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -52,7 +51,7 @@ public class LoginForm extends JFrame {
 
     private void openDashboard(String role) {
         dispose(); // Close login window
-        new Dashboard(role); // Open dashboard
+        new DashboardView(role); // Open dashboard
     }
 
     public static void main(String[] args) {

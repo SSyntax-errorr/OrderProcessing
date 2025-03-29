@@ -5,12 +5,16 @@ public class Item {
     private String name;
     private int cost;
     private int stock;
+    private int category_id;
+    private int threshold;
 
-    public Item(int id, String name, int cost, int stock) {
+    public Item(int id, String name, int cost, int stock, int category, int threshold) {
         this.item_id = id;
         this.name = name;
         this.cost = cost;
         this.stock = stock;
+        this.category_id = category;
+        this.threshold = threshold;
     }
 
     public int getId() {

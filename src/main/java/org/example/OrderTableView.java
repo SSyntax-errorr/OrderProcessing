@@ -3,9 +3,6 @@ package org.example;//
 // (powered by FernFlower decompiler)
 //
 
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,13 +10,13 @@ import java.sql.SQLException;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
-public class OrderManagement extends JFrame {
+public class OrderTableView extends JFrame {
 
     String[] columns = {"Order ID", "Customer ID", "Item ID", "Quantity", "Status"};
     private JTable orderTable;
     DefaultTableModel orderTableModel;
 
-    public OrderManagement() {
+    public OrderTableView() {
         this.setTitle("Order Management");
         this.setSize(400, 300);
         orderTableModel = new DefaultTableModel(columns, 0);

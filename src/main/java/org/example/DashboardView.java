@@ -11,8 +11,8 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-public class Dashboard extends JFrame {
-    public Dashboard(String role) {
+public class DashboardView extends JFrame {
+    public DashboardView(String role) {
         this.setTitle("Dashboard - " + role);
         this.setSize(400, 300);
         this.setDefaultCloseOperation(3);
@@ -23,9 +23,11 @@ public class Dashboard extends JFrame {
         JButton stockButton = new JButton("Manage Stock");
         JButton addOrderButton = new JButton("Add Orders");
         JButton newCustomerButton = new JButton("Add Customer");
+        JButton viewQuotes = new JButton("View Quotes");
+
         orderButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                new OrderManagement();
+                new OrderTableView();
             }
         });
         addOrderButton.addActionListener(new ActionListener() {
@@ -44,10 +46,17 @@ public class Dashboard extends JFrame {
                 new AddCustomerView();
             }
         });
+        viewQuotes.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new QuotesTableView();
+            }
+        });
 
         if(Objects.equals(role, "Sales Person")|| Objects.equals(role, "IS Manager")){
             this.add(addOrderButton);
             this.add(orderButton);
+            this.add(viewQuotes);
         }
 
 

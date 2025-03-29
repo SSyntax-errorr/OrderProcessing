@@ -68,7 +68,7 @@ public class AddNewOrderView extends JFrame {
             while(rs.next()) {
                 //stockInfo.append(rs.getString("item_id")).append(": ").append(rs.getInt("quantity")).append(" units\n");
 
-                products.addItem(new Item(rs.getInt("item_id"), rs.getString("name"), rs.getInt("cost_price"), rs.getInt("stock_level")));
+                products.addItem(new Item(rs.getInt("item_id"), rs.getString("name"), rs.getInt("cost_price"), rs.getInt("stock_level"), rs.getInt("category_id"), rs.getInt("low_stock_threshold")));
             }
         } catch (SQLException e) {
             e.printStackTrace();

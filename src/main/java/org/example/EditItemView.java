@@ -7,25 +7,22 @@ import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class EditItemView extends JFrame {
-
-
     private JTextField newPrice;
     private JButton confirmBtn;
-    private JTextField productField;
-    private JTextField quantityField;
-    private JComboBox items;
+    private Item item;
 
-    public EditItemView(ArrayList<Item> itemList){
+    public EditItemView(Item item) {
+        this.item = item;
+        setTitle("Edit Price - " + item.getName());
+        setSize(400, 200);
+        setLayout(new GridLayout(3, 2));
 
-        this.setTitle("Edit Price");
-        this.setSize(400, 300);
-        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.setLayout(new GridLayout(4, 2));
-        items = new JComboBox();
+        add(new JLabel("New Price for " + item.getName() + ":"));
         newPrice = new JTextField();
+        add(newPrice);
+
         confirmBtn = new JButton("Confirm");
         confirmBtn.addActionListener(new ActionListener() {
             @Override
@@ -33,26 +30,19 @@ public class EditItemView extends JFrame {
                 editPrice();
             }
         });
-//        this.add(items);
-        for (Item item : itemList) {
-            items.addItem(item);
-        }
-        this.add(items);
-        this.add(newPrice);
-        this.add(confirmBtn);
-        this.setVisible(true);
+        add(confirmBtn);
+
+        setVisible(true);
     }
 
-
-    public void editPrice() {
+    private void editPrice() {
         String sql_edit_price = "UPDATE items SET cost_price = ? WHERE item_id = ?";
-        Item selectedItem = (Item) this.items.getSelectedItem();
 
         try (Connection conn = DatabaseConnector.connect();
              PreparedStatement stmt = conn.prepareStatement(sql_edit_price)) {
 
-            stmt.setDouble(1, Double.parseDouble( newPrice.getText()));
-            stmt.setInt(2, selectedItem.getId());
+            stmt.setDouble(1, Double.parseDouble(newPrice.getText()));
+            stmt.setInt(2, item.getId());
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -65,7 +55,4 @@ public class EditItemView extends JFrame {
             e.printStackTrace();
         }
     }
-
-
-
 }
