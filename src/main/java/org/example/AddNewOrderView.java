@@ -73,7 +73,7 @@ public class AddNewOrderView extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        totalPrice = new JLabel();
+        totalPrice = new JLabel("Total cost: Rs 0");
         JLabel quantityLabel = new JLabel("Quantity:");
         this.quantityField = new JTextField();
         quantityField.addActionListener(new ActionListener() {
