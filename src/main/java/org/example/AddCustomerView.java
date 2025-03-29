@@ -24,7 +24,8 @@ public class AddCustomerView extends JFrame {
     public AddCustomerView(){
         this.setTitle("Add new Customer");
         this.setSize(400, 300);
-        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
         this.setLayout(new GridLayout(6, 2));
         nameLabel = new JLabel("Customer name:");
         addressLabel = new JLabel("Address:");

@@ -18,7 +18,7 @@ public class EditItemView extends JFrame {
         setTitle("Edit Price - " + item.getName());
         setSize(400, 200);
         setLayout(new GridLayout(3, 2));
-
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         add(new JLabel("New Price for " + item.getName() + ":"));
         newPrice = new JTextField();
         add(newPrice);

@@ -21,7 +21,7 @@ public class AddItemView extends JFrame {
 
         this.setTitle("Add New Item to Inventory");
         this.setSize(400, 300);
-        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         this.setLayout(new GridLayout(4, 2));
         itemName = new JTextField();
         itemPrice = new JTextField();

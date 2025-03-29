@@ -23,7 +23,7 @@ public class OrderTableView extends JFrame {
         orderTable = new JTable(orderTableModel);
         StringBuilder stockInfo = new StringBuilder();
         String sql = "SELECT * FROM orders";
-
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         try (
                 Connection conn = DatabaseConnector.connect();
                 PreparedStatement stmt = conn.prepareStatement(sql);

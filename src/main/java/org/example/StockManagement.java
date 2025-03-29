@@ -24,7 +24,8 @@ public class StockManagement extends JFrame {
         itemList = new ArrayList<>();
         setTitle("Stock Management");
         setSize(800, 650);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
 
