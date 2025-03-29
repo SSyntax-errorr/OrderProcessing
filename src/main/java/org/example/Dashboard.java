@@ -22,6 +22,7 @@ public class Dashboard extends JFrame {
         JButton orderButton = new JButton("Manage Orders");
         JButton stockButton = new JButton("Manage Stock");
         JButton addOrderButton = new JButton("Add Orders");
+        JButton newCustomerButton = new JButton("Add Customer");
         orderButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 new OrderManagement();
@@ -37,6 +38,12 @@ public class Dashboard extends JFrame {
                 new StockManagement(role);
             }
         });
+        newCustomerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new AddCustomerView();
+            }
+        });
 
         if(Objects.equals(role, "Sales Person")|| Objects.equals(role, "IS Manager")){
             this.add(addOrderButton);
@@ -47,6 +54,10 @@ public class Dashboard extends JFrame {
 
         if (Objects.equals(role, "Inventory Officer") || Objects.equals(role, "IS Manager")) {
             this.add(stockButton);
+        }
+
+        if (Objects.equals(role, "IS Manager")) {
+            this.add(newCustomerButton);
         }
 
         this.setVisible(true);

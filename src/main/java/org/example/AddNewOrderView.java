@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import javax.swing.*;
 
 public class AddNewOrderView extends JFrame {
@@ -20,28 +21,35 @@ public class AddNewOrderView extends JFrame {
     private JComboBox products;
     private JLabel totalPrice;
     private int tempTotal;
+    private int transportCost;
 
 
     public AddNewOrderView() {
 
-
+        transportCost = 0;
 
         this.setTitle("Add New Order");
-        this.setSize(300, 200);
-        this.setLayout(new GridLayout(4, 2));
+        this.setSize(400, 200);
+        this.setLayout(new GridLayout(5, 2));
         tempTotal = 0;
         this.customers = new JComboBox<>();
-        String sql_get_customers = "SELECT * FROM customers";
+        ArrayList<TransportCharge> transportChargesList = new ArrayList<>();
+        String sql_get_customers = "SELECT * FROM customers INNER JOIN transportcosts ON transportcosts.customerID = customers.customer_id";
         try (
                 Connection conn = DatabaseConnector.connect();
                 PreparedStatement stmt = conn.prepareStatement(sql_get_customers);
                 ResultSet rs = stmt.executeQuery();
+
         ) {
+//            transportCost = rs.getInt("transportCharge");
             while(rs.next()) {
                 //stockInfo.append(rs.getString("item_id")).append(": ").append(rs.getInt("quantity")).append(" units\n");
 
                 customers.addItem(new Customer(rs.getInt("customer_id"), rs.getString("name"), rs.getString("address"), rs.getString("contact_details")));
+                transportChargesList.add(new TransportCharge(rs.getInt("transportID"), rs.getInt("customer_id"), rs.getString("transportMethod"), rs.getInt("transportCharge")));
             }
+
+//            System.out.println(transportCost);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -71,7 +79,7 @@ public class AddNewOrderView extends JFrame {
         quantityField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                changePrice();
+                changePrice(transportChargesList);
             }
         });
         JButton submitButton = new JButton("Place Order");
@@ -80,7 +88,13 @@ public class AddNewOrderView extends JFrame {
                 AddNewOrderView.this.placeOrder();
             }
         });
-
+        JButton saveQuote = new JButton("Save as quote");
+        saveQuote.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveAsQuote();
+            }
+        });
 
         this.add(customerLabel);
         this.add(this.customers);
@@ -90,13 +104,49 @@ public class AddNewOrderView extends JFrame {
         this.add(quantityLabel);
         this.add(this.quantityField);
         this.add(totalPrice);
+        this.add(saveQuote);
         this.add(submitButton);
         this.setVisible(true);
     }
 
-    private void changePrice() {
+    private void saveAsQuote() {
+        Customer customer = (Customer) this.customers.getSelectedItem();
         Item product = (Item) this.products.getSelectedItem();
-        tempTotal = product.getCost() * Integer.parseInt( quantityField.getText());
+        int quantity = Integer.parseInt(this.quantityField.getText());
+
+        String sql = "INSERT INTO quotes ( itemID, customerID, quantity,unitPrice, status) VALUES (?, ?, ?, ?, ?)";
+
+        try (
+                Connection conn = DatabaseConnector.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+        ) {
+
+
+
+
+            stmt.setInt(2, customer.getId());
+//            stmt.setInt(2,);
+            stmt.setInt(1, product.getId());
+            stmt.setInt(3, quantity);
+            stmt.setString(5, "pending");
+            stmt.setInt(4, tempTotal);
+            stmt.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Quote added succesfully successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void changePrice(ArrayList<TransportCharge> transportCharges) {
+        Item product = (Item) this.products.getSelectedItem();
+        Customer customer = (Customer) this.customers.getSelectedItem();
+        int transportCharge = 0;
+        for (TransportCharge t : transportCharges){
+            if (t.getCustomerID() == customer.getId()){
+                transportCharge = t.getTransportCharge();
+            }
+        }
+        tempTotal = (product.getCost() * Integer.parseInt( quantityField.getText())) + transportCharge;
 
         totalPrice.setText("Total cost: Rs " + tempTotal);
     }
