@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class AddItemView extends JFrame {
@@ -13,6 +14,7 @@ public class AddItemView extends JFrame {
     private JTextField itemPrice;
     private JTextField quantity;
     private JButton confirmBtn;
+    private JComboBox<Category> itemCategory;
 
     public AddItemView() {
         setTitle("Add New Item to Inventory");
@@ -33,6 +35,8 @@ public class AddItemView extends JFrame {
         itemName = createStyledTextField();
         itemPrice = createStyledTextField();
         quantity = createStyledTextField();
+        itemCategory = new JComboBox<>();
+        getItemCategories();
         confirmBtn = createStyledButton("Confirm");
         confirmBtn.addActionListener(this::addItem);
 
@@ -53,18 +57,24 @@ public class AddItemView extends JFrame {
 
         gbc.gridx = 0;
         gbc.gridy = 2;
+        mainPanel.add(createLabel("Category: "), gbc);
+        gbc.gridx = 1;
+        mainPanel.add(itemCategory, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
         mainPanel.add(createLabel("Price:"), gbc);
         gbc.gridx = 1;
         mainPanel.add(itemPrice, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         mainPanel.add(createLabel("Stock:"), gbc);
         gbc.gridx = 1;
         mainPanel.add(quantity, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         mainPanel.add(confirmBtn, gbc);
@@ -74,15 +84,35 @@ public class AddItemView extends JFrame {
         setVisible(true);
     }
 
+    private void getItemCategories(){
+        String sql_get_categories = "SELECT * FROM categories";
+        try (Connection conn = DatabaseConnector.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql_get_categories)) {
+
+
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()){
+                itemCategory.addItem(new Category(rs.getInt("category_id"), rs.getString("category_name")));
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
     private void addItem(ActionEvent e) {
-        String sql_add_item = "INSERT INTO items (name, cost_price, stock_level) VALUES (?, ?, ?)";
+        String sql_add_item = "INSERT INTO items (name, cost_price, stock_level, category_id) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnector.connect();
              PreparedStatement stmt = conn.prepareStatement(sql_add_item)) {
+            Category category = (Category)itemCategory.getSelectedItem() ;
 
             stmt.setString(1, itemName.getText());
             stmt.setInt(2, Integer.parseInt(itemPrice.getText()));
             stmt.setInt(3, Integer.parseInt(quantity.getText()));
+            stmt.setInt(4, category.getCategoryID());
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
