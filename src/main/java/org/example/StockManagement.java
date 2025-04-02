@@ -4,34 +4,33 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.ArrayList;
 
 public class StockManagement extends JFrame {
-    private JPanel itemsPanel;          // Panel that holds individual item panels
-    private ArrayList<Item> itemList;   // List of items loaded from the DB
-    private String role;                // User role (e.g., "IS Manager")
+    private JPanel itemsPanel;
+    private ArrayList<Item> itemList;
+    private String role;
 
-    // Components for filtering and searching
     private JTextField searchField;
     private JComboBox<String> categoryFilter;
     private JButton searchButton;
     private JCheckBox lowStockCheckBox;
+
+    private static final int ITEM_PANEL_HEIGHT = 50;
+    private static final int ITEM_PANEL_WIDTH = 750;
 
     public StockManagement(String role) {
         this.role = role;
         itemList = new ArrayList<>();
         setTitle("Stock Management");
         setSize(800, 650);
-//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-
         JPanel topPanel = new JPanel(new FlowLayout());
         searchField = new JTextField(15);
-        searchButton = new JButton("Search");
+        searchButton = createStyledButton("Search");
         searchButton.addActionListener(e -> refreshItemsPanel());
 
         categoryFilter = new JComboBox<>();
@@ -50,7 +49,6 @@ public class StockManagement extends JFrame {
         topPanel.add(lowStockCheckBox);
         add(topPanel, BorderLayout.NORTH);
 
-
         itemsPanel = new JPanel();
         itemsPanel.setLayout(new BoxLayout(itemsPanel, BoxLayout.Y_AXIS));
         itemsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -58,9 +56,8 @@ public class StockManagement extends JFrame {
         JScrollPane scrollPane = new JScrollPane(itemsPanel);
         add(scrollPane, BorderLayout.CENTER);
 
-
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton addItemButton = new JButton("Add Item");
+        JButton addItemButton = createStyledButton("Add Item");
         addItemButton.addActionListener(e -> new AddItemView());
         bottomPanel.add(addItemButton);
         add(bottomPanel, BorderLayout.SOUTH);
@@ -68,7 +65,6 @@ public class StockManagement extends JFrame {
         refreshItemsPanel();
         setVisible(true);
     }
-
 
     private void loadCategories() {
         String sql = "SELECT category_name FROM categories";
@@ -83,7 +79,6 @@ public class StockManagement extends JFrame {
         }
     }
 
-
     private void refreshItemsPanel() {
         itemsPanel.removeAll();
         itemList.clear();
@@ -92,10 +87,7 @@ public class StockManagement extends JFrame {
         String selectedCategory = (String) categoryFilter.getSelectedItem();
         boolean filterLowStock = lowStockCheckBox.isSelected();
 
-
-
-        String sql = "SELECT * " +
-                "FROM items i JOIN categories c ON i.category_id = c.category_id ";
+        String sql = "SELECT * FROM items i JOIN categories c ON i.category_id = c.category_id ";
         boolean hasSearch = !searchText.isEmpty();
         boolean hasCategoryFilter = selectedCategory != null && !selectedCategory.equals("All Categories");
         boolean whereAdded = false;
@@ -132,60 +124,44 @@ public class StockManagement extends JFrame {
                     int category_id = rs.getInt("category_id");
                     String category = rs.getString("category_name");
 
-
-                    Item item = new Item(itemId, name, costPrice, stockLevel, category_id ,lowThreshold);
+                    Item item = new Item(itemId, name, costPrice, stockLevel, category_id, lowThreshold);
                     itemList.add(item);
 
-
                     JPanel itemPanel = new JPanel(new BorderLayout());
-                    itemPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-                    itemPanel.setPreferredSize(new Dimension(550, 50));
-
+                    itemPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+                    itemPanel.setBackground(Color.WHITE);
+                    itemPanel.setPreferredSize(new Dimension(ITEM_PANEL_WIDTH, ITEM_PANEL_HEIGHT));
+                    itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, ITEM_PANEL_HEIGHT));
 
                     JLabel itemLabel = new JLabel(name + " - Price: Rs " + costPrice + " - Stock: " + stockLevel +
                             " units (Category: " + category + ")");
-                    itemLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
+                    itemLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+                    itemLabel.setBorder(new EmptyBorder(5, 10, 5, 5));
+                    itemLabel.setForeground(stockLevel < lowThreshold ? Color.RED : Color.BLACK);
 
-                    if (stockLevel < lowThreshold) {
-                        itemLabel.setForeground(Color.RED);
-                    } else {
-                        itemLabel.setForeground(Color.BLACK);
-                    }
-                    itemPanel.add(itemLabel, BorderLayout.CENTER);
+                    JPanel buttonPanel = new JPanel();
+                    buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+                    buttonPanel.setBackground(Color.WHITE);
 
-
-                    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
-                    JButton editStockButton = new JButton("Edit Stock");
-                    editStockButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            String newStockStr = JOptionPane.showInputDialog(StockManagement.this,
-                                    "Enter new stock level for " + item.getName() + ":", item.getStock());
-                            if (newStockStr != null) {
-                                try {
-                                    int newStock = Integer.parseInt(newStockStr);
-                                    updateStockForItem(item, newStock);
-                                } catch (NumberFormatException ex) {
-                                    JOptionPane.showMessageDialog(StockManagement.this,
-                                            "Invalid stock value!", "Error", JOptionPane.ERROR_MESSAGE);
-                                }
-                            }
-                        }
-                    });
-                    buttonPanel.add(editStockButton);
+                    JButton editStockButton = createStyledButton("Edit Stock");
+                    editStockButton.addActionListener(e -> editStock(item));
 
                     if ("IS Manager".equals(role)) {
-                        JButton editPriceButton = new JButton("Edit Price");
-                        editPriceButton.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                new EditItemView(item);
-                            }
-                        });
+                        JButton editPriceButton = createStyledButton("Edit Price");
+                        editPriceButton.addActionListener(e -> new EditItemView(item));
+
+                        buttonPanel.add(Box.createHorizontalGlue()); 
+                        buttonPanel.add(editStockButton);
+                        buttonPanel.add(Box.createRigidArea(new Dimension(10, 0))); 
                         buttonPanel.add(editPriceButton);
+                        buttonPanel.add(Box.createHorizontalGlue());
+                    } else {
+                        buttonPanel.add(Box.createHorizontalGlue());
+                        buttonPanel.add(editStockButton);
+                        buttonPanel.add(Box.createHorizontalGlue());
                     }
 
+                    itemPanel.add(itemLabel, BorderLayout.CENTER);
                     itemPanel.add(buttonPanel, BorderLayout.EAST);
                     itemsPanel.add(itemPanel);
                     itemsPanel.add(Box.createVerticalStrut(10));
@@ -199,6 +175,19 @@ public class StockManagement extends JFrame {
         itemsPanel.repaint();
     }
 
+    private void editStock(Item item) {
+        String newStockStr = JOptionPane.showInputDialog(this,
+                "Enter new stock level for " + item.getName() + ":", item.getStock());
+        if (newStockStr != null) {
+            try {
+                int newStock = Integer.parseInt(newStockStr);
+                updateStockForItem(item, newStock);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Invalid stock value!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
 
     private void updateStockForItem(Item item, int newStock) {
         String sql = "UPDATE items SET stock_level = ? WHERE item_id = ?";
@@ -220,5 +209,14 @@ public class StockManagement extends JFrame {
             e.printStackTrace();
         }
     }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 12));
+        button.setForeground(Color.WHITE);
+        button.setBackground(new Color(64, 128, 128));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        return button;
+    }
 }
-//if ur reading this ur gay

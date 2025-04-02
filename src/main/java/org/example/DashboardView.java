@@ -1,31 +1,39 @@
-package org.example;//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
+package org.example;
 
-import java.awt.FlowLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Objects;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 
 public class DashboardView extends JFrame {
     public DashboardView(String role) {
-        this.setTitle("Dashboard - " + role);
-        this.setSize(400, 300);
-        this.setDefaultCloseOperation(3);
-        this.setLayout(new FlowLayout());
-        JLabel welcomeLabel = new JLabel("Welcome, " + role);
-        this.add(welcomeLabel);
-        JButton orderButton = new JButton("Manage Orders");
-        JButton stockButton = new JButton("Manage Stock");
-        JButton addOrderButton = new JButton("Add Orders");
-        JButton newCustomerButton = new JButton("Add Customer");
-        JButton viewQuotes = new JButton("View Quotes");
-        JButton addUser = new JButton("Add New User");
+        setTitle("Dashboard - " + role);
+        setSize(400, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center window on the screen
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10); // Space between components
 
+        // Title label
+        JLabel welcomeLabel = new JLabel("Welcome, " + role);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        welcomeLabel.setForeground(new Color(64, 128, 128)); // Blue color
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        add(welcomeLabel, gbc);
+
+        // Buttons with styling
+        JButton orderButton = createStyledButton("Manage Orders");
+        JButton stockButton = createStyledButton("Manage Stock");
+        JButton addOrderButton = createStyledButton("Add Orders");
+        JButton newCustomerButton = createStyledButton("Add Customer");
+        JButton viewQuotes = createStyledButton("View Quotes");
+        JButton addUser = createStyledButton("Add New User");
+
+        // Action Listeners
         orderButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 new OrderTableView();
@@ -60,23 +68,48 @@ public class DashboardView extends JFrame {
             }
         });
 
-        if(Objects.equals(role, "Sales Person")|| Objects.equals(role, "IS Manager")){
-            this.add(addOrderButton);
-            this.add(orderButton);
-            this.add(viewQuotes);
+        // Layout buttons based on user role
+        if (Objects.equals(role, "Sales Person") || Objects.equals(role, "IS Manager")) {
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            gbc.gridwidth = 2;
+            add(addOrderButton, gbc);
+
+            gbc.gridy = 2;
+            add(orderButton, gbc);
+
+            gbc.gridy = 3;
+            add(viewQuotes, gbc);
         }
 
-
-
         if (Objects.equals(role, "Inventory Officer") || Objects.equals(role, "IS Manager")) {
-            this.add(stockButton);
+            gbc.gridy = 4;
+            add(stockButton, gbc);
         }
 
         if (Objects.equals(role, "IS Manager")) {
-            this.add(newCustomerButton);
-            this.add(addUser);
+            gbc.gridy = 5;
+            add(newCustomerButton, gbc);
+
+            gbc.gridy = 6;
+            add(addUser, gbc);
         }
 
-        this.setVisible(true);
+        setVisible(true);
+    }
+
+    // Helper method to create styled buttons
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setBackground(new Color(64, 128, 128));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setPreferredSize(new Dimension(200, 40));
+        return button;
+    }
+
+    public static void main(String[] args) {
+        new DashboardView("Sales Person");
     }
 }

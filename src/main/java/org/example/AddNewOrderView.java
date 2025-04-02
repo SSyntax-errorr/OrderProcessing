@@ -1,45 +1,171 @@
 package org.example;
 
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.util.ArrayList;
 
 public class AddNewOrderView extends JFrame {
-    private JComboBox customers;
-    private JComboBox products;
+    private JComboBox<Customer> customers;
+    private JComboBox<Item> products;
     private JLabel totalPrice;
-    private int tempTotal;
-    private int transportCost;
     private JTextField quantityField;
-
-    // New payment method components:
-    private JComboBox<String> paymentMethodCombo;
+    private int tempTotal;
     private JTextField chequeNumberField;
     private JLabel chequeNumberLabel;
+    private JComboBox<String> paymentMethodCombo;
+    private ArrayList<TransportCharge> transportChargesList = new ArrayList<>();
 
     public AddNewOrderView() {
-        transportCost = 0;
-        tempTotal = 0;
+        setTitle("Add New Order");
+        setSize(450, 450);
+        setLocationRelativeTo(null);
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
 
-        this.setTitle("Add New Order");
-        // Increase number of rows to accommodate new payment fields
-        this.setSize(400, 300);
-        this.setLayout(new GridLayout(7, 2));
+        // Title Label
+        JLabel titleLabel = new JLabel("Order Processing System");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setForeground(new Color(64, 128, 128));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        add(titleLabel, gbc);
 
-        // Populate customers combobox and transport charges list
-        this.customers = new JComboBox<>();
-        ArrayList<TransportCharge> transportChargesList = new ArrayList<>();
-        String sql_get_customers = "SELECT * FROM customers INNER JOIN transportcosts ON transportcosts.customerID = customers.customer_id";
+        // Customer Label & ComboBox
+        JLabel customerLabel = new JLabel("Customer:");
+        customerLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        add(customerLabel, gbc);
+
+        customers = new JComboBox<>();
+        customers.setFont(new Font("Arial", Font.PLAIN, 14));
+        gbc.gridx = 1;
+        add(customers, gbc);
+
+        loadCustomers();
+
+        // Product Label & ComboBox
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        JLabel productLabel = new JLabel("Product:");
+        productLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        add(productLabel, gbc);
+
+        products = new JComboBox<>();
+        products.setFont(new Font("Arial", Font.PLAIN, 14));
+        gbc.gridx = 1;
+        add(products, gbc);
+
+        loadProducts();
+
+        // Quantity Label & Field
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        JLabel quantityLabel = new JLabel("Quantity:");
+        quantityLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        add(quantityLabel, gbc);
+
+        quantityField = new JTextField(10);
+        quantityField.setFont(new Font("Arial", Font.PLAIN, 14));
+        gbc.gridx = 1;
+        add(quantityField, gbc);
+
+        // Total Price Label
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        totalPrice = new JLabel("Total cost: Rs 0");
+        totalPrice.setFont(new Font("Arial", Font.BOLD, 14));
+        add(totalPrice, gbc);
+
+        // Payment Method
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        JLabel paymentMethodLabel = new JLabel("Payment Method:");
+        paymentMethodLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        add(paymentMethodLabel, gbc);
+
+        paymentMethodCombo = new JComboBox<>(new String[]{"Cash", "Cheque", "Credit Card"});
+        paymentMethodCombo.setFont(new Font("Arial", Font.PLAIN, 14));
+        gbc.gridx = 1;
+        add(paymentMethodCombo, gbc);
+
+        paymentMethodCombo.addActionListener(e -> {
+            boolean showCheque = "Cheque".equals(paymentMethodCombo.getSelectedItem());
+            chequeNumberLabel.setVisible(showCheque);
+            chequeNumberField.setVisible(showCheque);
+            revalidate();
+            repaint();
+        });
+
+        // Cheque Number Field
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        chequeNumberLabel = new JLabel("Cheque Number:");
+        chequeNumberLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        chequeNumberLabel.setVisible(false);
+        add(chequeNumberLabel, gbc);
+
+        gbc.gridx = 1;
+        chequeNumberField = new JTextField(10);
+        chequeNumberField.setFont(new Font("Arial", Font.PLAIN, 14));
+        chequeNumberField.setVisible(false);
+        add(chequeNumberField, gbc);
+
+        // Save Quote Button
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        JButton saveQuote = createStyledButton("Save as Quote");
+        saveQuote.addActionListener(e -> saveAsQuote());
+        add(saveQuote, gbc);
+
+        // Submit Order Button
+        gbc.gridx = 1;
+        JButton submitButton = createStyledButton("Place Order");
+        submitButton.addActionListener(e -> placeOrder());
+        add(submitButton, gbc);
+
+        // Add listeners for dynamic price updates
+        quantityField.addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                changePrice();
+            }
+        });
+
+        products.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                changePrice();
+            }
+        });
+
+        customers.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                changePrice();
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setBackground(new Color(64, 128, 128));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setPreferredSize(new Dimension(150, 40));
+        return button;
+    }
+
+    private void loadCustomers() {
+        String sql = "SELECT * FROM customers INNER JOIN transportcosts ON transportcosts.customerID = customers.customer_id";
         try (Connection conn = DatabaseConnector.connect();
-             PreparedStatement stmt = conn.prepareStatement(sql_get_customers);
-             ResultSet rs = stmt.executeQuery();) {
-            while(rs.next()) {
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
                 customers.addItem(new Customer(rs.getInt("customer_id"),
                         rs.getString("name"),
                         rs.getString("address"),
@@ -52,15 +178,14 @@ public class AddNewOrderView extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
-        JLabel customerLabel = new JLabel("Customer Name:");
-        JLabel productLabel = new JLabel("Product Name:");
-        this.products = new JComboBox<>();
+    private void loadProducts() {
         String sql = "SELECT * FROM items";
         try (Connection conn = DatabaseConnector.connect();
              PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery();) {
-            while(rs.next()) {
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
                 products.addItem(new Item(rs.getInt("item_id"),
                         rs.getString("name"),
                         rs.getInt("cost_price"),
@@ -71,87 +196,30 @@ public class AddNewOrderView extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
-        totalPrice = new JLabel("Total cost: Rs 0");
-        JLabel quantityLabel = new JLabel("Quantity:");
-        this.quantityField = new JTextField();
-        quantityField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                changePrice(transportChargesList);
-            }
-        });
-
-        // New Payment Method combobox
-        JLabel paymentMethodLabel = new JLabel("Payment Method:");
-        paymentMethodCombo = new JComboBox<>(new String[]{"Cash", "Cheque", "Credit Card"});
-        // When the payment method changes, show/hide cheque number field
-        paymentMethodCombo.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String method = (String) paymentMethodCombo.getSelectedItem();
-                boolean showCheque = "Cheque".equals(method);
-                chequeNumberField.setVisible(showCheque);
-                chequeNumberLabel.setVisible(showCheque);
-                // Force layout update
-                AddNewOrderView.this.revalidate();
-                AddNewOrderView.this.repaint();
-            }
-        });
-
-        // New Cheque Number field and label; initially hidden
-        chequeNumberLabel = new JLabel("Cheque Number:");
-        chequeNumberField = new JTextField();
-        chequeNumberLabel.setVisible(false);
-        chequeNumberField.setVisible(false);
-
-        // Create buttons
-        JButton submitButton = new JButton("Place Order");
-        submitButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                AddNewOrderView.this.placeOrder();
-            }
-        });
-        JButton saveQuote = new JButton("Save as Quote");
-        saveQuote.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAsQuote();
-            }
-        });
-
-        // Add components to frame (using GridLayout rows)
-        this.add(customerLabel);
-        this.add(this.customers);
-        this.add(productLabel);
-        this.add(products);
-        this.add(quantityLabel);
-        this.add(this.quantityField);
-        this.add(totalPrice);
-        this.add(saveQuote);
-        // Payment method row
-        this.add(paymentMethodLabel);
-        this.add(paymentMethodCombo);
-        // Cheque number row (hidden unless cheque is selected)
-        this.add(chequeNumberLabel);
-        this.add(chequeNumberField);
-        // Order submit button
-        this.add(submitButton);
-
-        this.setVisible(true);
+    private void changePrice() {
+        try {
+            Item product = (Item) products.getSelectedItem();
+            Customer customer = (Customer) customers.getSelectedItem();
+            int quantity = Integer.parseInt(quantityField.getText().trim());
+            int transportCharge = transportChargesList.stream()
+                    .filter(t -> t.getCustomerID() == customer.getId())
+                    .findFirst().map(TransportCharge::getTransportCharge).orElse(0);
+            tempTotal = (product.getCost() * quantity) + transportCharge;
+            totalPrice.setText("Total cost: Rs " + tempTotal);
+        } catch (NumberFormatException e) {
+            totalPrice.setText("Total cost: Rs 0");
+        }
     }
 
     private void saveAsQuote() {
-        Customer customer = (Customer) this.customers.getSelectedItem();
-        Item product = (Item) this.products.getSelectedItem();
-        int quantity = Integer.parseInt(this.quantityField.getText());
+        Customer customer = (Customer) customers.getSelectedItem();
+        Item product = (Item) products.getSelectedItem();
+        int quantity = Integer.parseInt(quantityField.getText().trim());
         String paymentMethod = (String) paymentMethodCombo.getSelectedItem();
-        String chequeNumber = "";
-        if ("Cheque".equals(paymentMethod)) {
-            chequeNumber = chequeNumberField.getText().trim();
-        }
+        String chequeNumber = "Cheque".equals(paymentMethod) ? chequeNumberField.getText().trim() : "";
 
-        // Updated SQL: Assumes quotes table has payment_method and cheque_number columns.
         String sql = "INSERT INTO quotes (itemID, customerID, quantity, unitPrice, status, payment_method, cheque_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnector.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -167,19 +235,6 @@ public class AddNewOrderView extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    private void changePrice(ArrayList<TransportCharge> transportCharges) {
-        Item product = (Item) this.products.getSelectedItem();
-        Customer customer = (Customer) this.customers.getSelectedItem();
-        int transportCharge = 0;
-        for (TransportCharge t : transportCharges) {
-            if (t.getCustomerID() == customer.getId()) {
-                transportCharge = t.getTransportCharge();
-            }
-        }
-        tempTotal = (product.getCost() * Integer.parseInt(quantityField.getText())) + transportCharge;
-        totalPrice.setText("Total cost: Rs " + tempTotal);
     }
 
     private void placeOrder() {
